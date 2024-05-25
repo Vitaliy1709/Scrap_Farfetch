@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from urllib.parse import urljoin
 
 from selenium import webdriver
@@ -34,7 +36,13 @@ def scroll_page(driver, scroll_speed=50, scroll_pause_time=0.3):
 def parse_page(driver, base_url):
 
     # Отримуємо HTML-код сторінки після повного завантаження контенту
-    html_code = driver.page_source
+    
+    with open("project_all.html", "a+", encoding="utf-8") as file:
+        file.write(driver.page_source)
+
+    # Зчитуємо данні
+    with open("project_all.html", encoding="utf-8") as f:
+        html_code = f.read()
 
     # Створюємо об'єкт BeautifulSoup
     soup = BeautifulSoup(html_code, "html.parser")
@@ -82,7 +90,7 @@ def parse_page(driver, base_url):
             "age_group": "None",
             "condition": "None"
         })
-
+    
     return products_data
 
 
@@ -104,21 +112,25 @@ def save_to_xml(products_data):
 
     # Створюємо об'єкт ElementTree та записуємо дані у XML файл
     tree = ET.ElementTree(channel)
-    with open("назва_файлу.xml", "wb") as xml_file:
+    with open("Farfetch_Womens_Dresses.xml", "wb") as xml_file:
         tree.write(xml_file, encoding="utf-8", xml_declaration=True)
 
 
 def main():
     try:
+        load_dotenv()
         # Створюємо екземпляр веб-драйвера
-        service = Service()  # path до chromedriver
+        service = Service(os.getenv("SERVICE"))  # path до chromedriver
         options = webdriver.ChromeOptions()
         driver = webdriver.Chrome(service=service, options=options)
-        base_url = "базовий url"
+        
+        base_url = os.getenv("BASE_URL")
+
 
         # Завантажуємо сторінки
         for page_number in range(1, 3):  # Перебір сторінок 1 та 2
-            url = f"path{page_number}&view=96&sort=3"
+            URL = os.getenv("URL")
+            url = f"{URL}?page={page_number}&view=96&sort=3"
             driver.get(url)
 
             # Чекаємо, доки з'явиться хоча б один елемент
@@ -137,7 +149,7 @@ def main():
     except WebDriverException as e:
         print("Помилка WebDriver:", e)
     except Exception as e:
-        print("ПВиникла помилка:", e)
+        print("Виникла помилка:", e)
     finally:
         # Завжди закриваємо браузер після використання
         driver.quit()
@@ -145,3 +157,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
